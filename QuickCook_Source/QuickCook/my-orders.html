@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Đơn hàng của tôi | QuickCook</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="top-strip">Tươi ngon mỗi ngày · Giao nhanh nội thành · 100% Minh bạch nguồn gốc</div>
+  
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">Q</span>
+      <span>quick<span class="brand-green">cook</span><small>NẤU NGON, SỐNG NHẸ</small></span>
+    </a>
+    <form class="search" id="searchForm">
+      <input id="searchInput" type="search" placeholder="Tìm món ăn, combo nguyên liệu..." aria-label="Tìm kiếm">
+      <button>⌕</button>
+    </form>
+    <nav class="header-actions">
+      <a href="cart.html">🛒 <span>Giỏ hàng</span> <b id="cartCount" class="cart-count">0</b></a>
+    </nav>
+  </header>
+
+  <nav class="main-nav">
+    <a href="index.html">Trang chủ</a>
+    <a href="products.html">Tất cả sản phẩm</a>
+    <a href="products.html?category=combo">Combo gia đình</a>
+    <a href="cart.html">Giỏ hàng</a>
+  </nav>
+
+  <main class="wrap page-main">
+    <div class="breadcrumbs">
+      <a href="index.html">Trang chủ</a> / 
+      <span>Đơn hàng của tôi</span>
+    </div>
+
+    <div class="page-title-row">
+      <div>
+        <span class="eyebrow">LỊCH SỬ MUA SẮM</span>
+        <h1>Đơn hàng của bạn</h1>
+        <p>Theo dõi tiến độ sơ chế, đóng thùng lạnh và vận chuyển của từng bữa cơm nhà.</p>
+      </div>
+      <a href="products.html" class="btn btn-primary">+ Đặt thêm món mới</a>
+    </div>
+
+    <div id="myOrdersList" class="my-orders-container">
+      <div class="loading-state">Đang tải danh sách đơn hàng...</div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-bottom">© 2026 QuickCook · Tươi ngon mỗi ngày · Nấu ngon, sống nhẹ.</div>
+  </footer>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const user = getCurrentUser();
+      const container = document.getElementById("myOrdersList");
+      const allOrders = loadOrders();
+
+      // Nếu đã đăng nhập, lọc đơn của user đó hoặc các đơn không có userId (đặt demo gần nhất)
+      let userOrders = allOrders;
+      if (user) {
+        userOrders = allOrders.filter(o => !o.userId || o.userId === user.id || o.email === user.email);
+      }
+
+      if (!userOrders.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div style="font-size:48px;">📦</div>
+            <h2>Bạn chưa có đơn hàng nào</h2>
+            <p class="muted">Hãy chọn ngay các set nguyên liệu sơ chế tươi ngon để chuẩn bị bữa ăn ấm cúng cho gia đình!</p>
+            <a href="products.html" class="btn btn-primary">Khám phá thực đơn ngay →</a>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = userOrders.map(o => `
+        <article class="my-order-card">
+          <div class="my-order-header">
+            <div>
+              <span class="order-code">Mã đơn: <b>${escapeHtml(o.id)}</b></span>
+              <span class="order-date">📅 Ngày đặt: ${new Date(o.createdAt).toLocaleString("vi-VN")}</span>
+            </div>
+            <div class="order-status-group">
+              <span class="status-pill ${getStatusClass(o.status)}">${escapeHtml(o.status)}</span>
+              <span class="payment-pill ${o.paymentStatus.includes('Đã') ? 'tag-green' : 'tag-orange'}">${escapeHtml(o.paymentStatus)}</span>
+            </div>
+          </div>
+
+          <div class="my-order-items">
+            ${(o.items || []).map(i => `
+              <div class="my-item-row">
+                <span class="my-item-name">🍲 <b>${escapeHtml(i.name)}</b></span>
+                <span class="my-item-qty">Số lượng: <b>${i.qty}</b></span>
+                <span class="my-item-price">${money(i.price * i.qty)}</span>
+              </div>
+            `).join("")}
+          </div>
+
+          <div class="my-order-footer">
+            <div class="my-order-shipping-info">
+              <small>📍 <b>Giao đến:</b> ${escapeHtml(o.address)} · 📞 ${escapeHtml(o.phone)}</small>
+            </div>
+            <div class="my-order-total-action">
+              <div class="my-order-total">
+                <small>Tổng cộng:</small>
+                <b>${money(o.total)}</b>
+              </div>
+              ${o.status === "Mới đặt" ? `
+                <button class="btn btn-outline btn-small" onclick="cancelOrder('${escapeJs(o.id)}')">Hủy đơn</button>
+              ` : ""}
+              ${o.payment === "VIETQR" && !o.paymentStatus.includes("Đã") ? `
+                <button class="btn btn-primary btn-small" onclick="payAgain('${escapeJs(o.id)}')">Quét QR thanh toán</button>
+              ` : ""}
+            </div>
+          </div>
+        </article>
+      `).join("");
+    });
+
+    function getStatusClass(status) {
+      if (status === "Hoàn tất") return "tag-green";
+      if (status === "Đang giao hàng" || status === "Đang giao") return "tag-blue";
+      if (status === "Đang sơ chế") return "tag-orange";
+      if (status === "Đã hủy") return "tag-gray";
+      return "tag-active";
+    }
+
+    function cancelOrder(orderId) {
+      if (!confirm("Bạn có chắc chắn muốn hủy đơn hàng " + orderId + "?")) return;
+      const orders = loadOrders();
+      const order = orders.find(o => o.id === orderId);
+      if (order) {
+        order.status = "Đã hủy";
+        saveOrders(orders);
+        showToast("Đã hủy đơn hàng " + orderId);
+        setTimeout(() => location.reload(), 600);
+      }
+    }
+
+    function payAgain(orderId) {
+      const orders = loadOrders();
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+      const vietQrUrl = `https://img.vietqr.io/image/MB-0388998899-compact2.jpg?amount=${order.total}&addInfo=${encodeURIComponent(order.id)}&accountName=QUICKCOOK%20VIETNAM`;
+      
+      const modal = document.createElement("div");
+      modal.className = "cert-modal";
+      modal.innerHTML = `
+        <div class="cert-modal-backdrop" onclick="this.parentElement.remove()"></div>
+        <div class="cert-modal-dialog" style="max-width:480px;text-align:center;">
+          <button class="cert-modal-close" onclick="this.closest('.cert-modal').remove()">✕</button>
+          <div style="background:#fff;padding:24px;border-radius:14px;">
+            <h3>Quét mã thanh toán đơn ${escapeHtml(order.id)}</h3>
+            <img src="${vietQrUrl}" style="max-width:240px;margin:15px auto;display:block;border:1px solid #ddd;border-radius:8px;">
+            <p><b>Số tiền:</b> <span class="text-price" style="font-size:20px;">${money(order.total)}</span></p>
+            <p><small>MBBank · STK: 0388998899 · CTY QUICKCOOK</small></p>
+            <button class="btn btn-primary btn-full" onclick="confirmPaidMini('${escapeJs(order.id)}', this)">✅ Xác nhận đã chuyển tiền</button>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
+    }
+
+    window.confirmPaidMini = function(orderId, btn) {
+      btn.disabled = true;
+      btn.textContent = "Đang kiểm tra...";
+      setTimeout(() => {
+        const orders = loadOrders();
+        const order = orders.find(o => o.id === orderId);
+        if (order) {
+          order.paymentStatus = "Đã thanh toán VietQR ✓";
+          order.status = "Đang sơ chế";
+          saveOrders(orders);
+        }
+        showToast("Đã xác nhận thanh toán thành công!");
+        setTimeout(() => location.reload(), 800);
+      }, 1200);
+    };
+  </script>
+</body>
+</html>

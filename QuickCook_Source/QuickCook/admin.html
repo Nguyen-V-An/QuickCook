@@ -1,1 +1,292 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Quản trị | QuickCook</title><link rel="stylesheet" href="css/styles.css"></head><body class="admin-body"><div class="admin-top"><a class="brand" href="index.html"><span class="brand-mark">Q</span><span>quick<span class="brand-green">cook</span><small>ADMIN DEMO</small></span></a><a href="index.html">← Về cửa hàng</a></div><main class="wrap page-main"><div class="page-title-row"><div><span class="eyebrow">KHU VỰC QUẢN LÝ</span><h1>Quản trị cửa hàng</h1><p>Bản demo lưu dữ liệu trên trình duyệt hiện tại.</p></div><button id="resetData" class="btn btn-outline">Khôi phục dữ liệu mẫu</button></div><div class="admin-stats" id="adminStats"></div><div class="admin-tabs"><button class="active" data-panel="productsPanel">Sản phẩm</button><button data-panel="ordersPanel">Đơn hàng</button></div><section id="productsPanel" class="admin-panel"><div class="admin-panel-head"><h2>Danh sách sản phẩm</h2><button id="addProduct" class="btn btn-primary">+ Thêm sản phẩm</button></div><div class="table-wrap"><table><thead><tr><th>Sản phẩm</th><th>Danh mục</th><th>Giá</th><th>Tồn kho</th><th>Thao tác</th></tr></thead><tbody id="adminProductRows"></tbody></table></div><form id="productForm" class="admin-form hidden"><h3 id="productFormTitle">Thêm sản phẩm</h3><input type="hidden" name="id"><div class="form-grid"><label>Tên sản phẩm *<input name="name" required></label><label>Danh mục *<select name="category"><option value="combo">Combo gia đình</option><option value="rau">Rau củ sơ chế</option><option value="thit">Thịt cá</option><option value="canh">Canh & món nhẹ</option></select></label><label>Giá (VNĐ) *<input name="price" type="number" min="1000" required></label><label>Tồn kho *<input name="stock" type="number" min="0" required></label><label class="full-field">Ảnh (URL)<input name="image" type="url" placeholder="https://..."></label><label class="full-field">Mô tả<textarea name="description" rows="2"></textarea></label></div><div class="button-row"><button class="btn btn-primary">Lưu sản phẩm</button><button type="button" id="cancelProduct" class="btn btn-outline">Hủy</button></div></form></section><section id="ordersPanel" class="admin-panel hidden"><h2>Đơn hàng</h2><div class="table-wrap"><table><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Ngày đặt</th><th>Tổng tiền</th><th>Thanh toán</th><th>Trạng thái</th></tr></thead><tbody id="adminOrderRows"></tbody></table></div></section><p class="muted small">Lưu ý: không có xác thực admin thật; không triển khai public nếu chưa có backend và phân quyền.</p></main><div id="toast" class="toast"></div><script src="js/data.js"></script><script src="js/app.js"></script><script src="js/admin.js"></script></body></html>
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Dashboard Quản Trị | QuickCook</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="admin-body">
+  <!-- MÀN HÌNH CHẶN TRUY CẬP PHÂN QUYỀN (ACCESS DENIED) -->
+  <div id="adminAccessDenied" class="access-denied-wrap hidden">
+    <div class="access-denied-card">
+      <div class="denied-icon">🚫</div>
+      <h2>Truy cập bị từ chối! (403 Forbidden)</h2>
+      <p id="deniedMessage">Trang Quản trị này yêu cầu quyền <b>Quản trị viên (Admin)</b>. Tài khoản hiện tại của bạn không có quyền truy cập khu vực này.</p>
+      <div class="denied-actions">
+        <a href="index.html" class="btn btn-outline">← Về trang chủ cửa hàng</a>
+        <button type="button" class="btn btn-primary" id="btnSwitchToAdmin">Đăng nhập bằng tài khoản Admin →</button>
+      </div>
+      <div class="denied-hint">
+        <small>Tài khoản Admin thử nghiệm: <b>admin@quickcook.vn</b> / Mật khẩu: <b>admin123</b></small>
+      </div>
+    </div>
+  </div>
+
+  <!-- GIAO DIỆN QUẢN TRỊ ADMIN CHÍNH -->
+  <div id="adminApp" class="hidden">
+    <header class="admin-top">
+      <div class="admin-brand-area">
+        <a class="brand" href="index.html">
+          <span class="brand-mark">Q</span>
+          <span>quick<span class="brand-green">cook</span><small>BẢNG ĐIỀU KHIỂN QUẢN TRỊ</small></span>
+        </a>
+        <span class="admin-live-badge">● Hệ thống trực tuyến</span>
+      </div>
+
+      <div class="admin-top-right">
+        <div class="admin-user-pill">
+          <span class="admin-avatar">👑</span>
+          <div>
+            <b id="adminUserName">Admin QuickCook</b>
+            <small id="adminUserEmail">admin@quickcook.vn</small>
+          </div>
+        </div>
+        <a href="index.html" class="btn btn-outline btn-small" target="_blank">👁️ Xem website</a>
+        <button type="button" class="btn btn-dark btn-small" onclick="logout()">Đăng xuất</button>
+      </div>
+    </header>
+
+    <main class="wrap page-main">
+      <div class="page-title-row">
+        <div>
+          <span class="eyebrow">TỔNG QUAN VẬN HÀNH & KINH DOANH</span>
+          <h1>Trung tâm Điều hành Bếp QuickCook</h1>
+          <p>Giám sát đơn hàng, kiểm soát tồn kho nguyên liệu sạch và quản lý minh bạch chuỗi cung ứng.</p>
+        </div>
+        <div class="admin-header-actions">
+          <button id="resetData" class="btn btn-outline">↺ Khôi phục dữ liệu mẫu (16 món)</button>
+        </div>
+      </div>
+
+      <!-- KPI STATS CARDS -->
+      <div class="admin-stats-grid" id="adminStatsGrid">
+        <!-- Render từ admin.js -->
+      </div>
+
+      <!-- ANALYTICS CHARTS (BIỂU ĐỒ DOANH THU & DANH MỤC) -->
+      <div class="analytics-row">
+        <div class="chart-card">
+          <div class="card-header">
+            <h3>📊 Doanh thu 7 ngày gần nhất</h3>
+            <span class="trend-badge text-success">▲ +18.4% so với tuần trước</span>
+          </div>
+          <div class="bar-chart-container" id="revenueBarChart"></div>
+        </div>
+
+        <div class="chart-card">
+          <div class="card-header">
+            <h3>🍱 Tỷ trọng danh mục bán chạy</h3>
+            <small>Dựa trên số lượng đơn hàng</small>
+          </div>
+          <div class="category-distribution" id="categoryDistribution"></div>
+        </div>
+      </div>
+
+      <!-- TABS QUẢN TRỊ -->
+      <div class="admin-nav-tabs">
+        <button class="active" data-panel="ordersPanel">
+          <span class="icon">📦</span> Quản lý Đơn hàng (<span id="tabOrderCount">0</span>)
+        </button>
+        <button data-panel="productsPanel">
+          <span class="icon">🍲</span> Quản lý Món ăn & Tồn kho (<span id="tabProductCount">0</span>)
+        </button>
+        <button data-panel="ingredientsPanel">
+          <span class="icon">🔍</span> Nguồn gốc & Giấy chứng nhận
+        </button>
+        <button data-panel="usersPanel">
+          <span class="icon">👥</span> Tài khoản & Phân quyền
+        </button>
+      </div>
+
+      <!-- TAB 1: QUẢN LÝ ĐƠN HÀNG -->
+      <section id="ordersPanel" class="admin-panel">
+        <div class="panel-header-row">
+          <div>
+            <h2>Danh sách Đơn hàng</h2>
+            <p class="muted">Theo dõi và cập nhật trạng thái đơn hàng thời gian thực.</p>
+          </div>
+          <div class="filter-status-buttons" id="orderFilterButtons">
+            <button class="pill-filter active" data-filter="all">Tất cả</button>
+            <button class="pill-filter" data-filter="Mới đặt">Mới đặt</button>
+            <button class="pill-filter" data-filter="Đang sơ chế">Đang sơ chế</button>
+            <button class="pill-filter" data-filter="Đang giao hàng">Đang giao</button>
+            <button class="pill-filter" data-filter="Hoàn tất">Hoàn tất</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Khách hàng</th>
+                <th>Món đặt</th>
+                <th>Tổng tiền</th>
+                <th>Thanh toán</th>
+                <th>Trạng thái đơn</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="adminOrderRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 2: QUẢN LÝ MÓN ĂN -->
+      <section id="productsPanel" class="admin-panel hidden">
+        <div class="panel-header-row">
+          <div>
+            <h2>Danh sách Món ăn & Combo</h2>
+            <p class="muted">Thêm, sửa công thức, cập nhật giá bán và số lượng tồn kho.</p>
+          </div>
+          <button id="addProduct" class="btn btn-primary">+ Thêm món ăn mới</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Món ăn</th>
+                <th>Danh mục</th>
+                <th>Giá bán</th>
+                <th>Tồn kho</th>
+                <th>Khẩu phần & Nấu</th>
+                <th>Nguyên liệu VietGAP</th>
+                <th>Thao tác</th>
+              </tr>
+            </thead>
+            <tbody id="adminProductRows"></tbody>
+          </table>
+        </div>
+
+        <!-- FORM THÊM / SỬA MÓN ĂN -->
+        <form id="productForm" class="admin-form hidden">
+          <div class="form-title-bar">
+            <h3 id="productFormTitle">Thêm món ăn mới</h3>
+            <button type="button" class="close-form-btn" id="closeFormBtn">✕</button>
+          </div>
+          <input type="hidden" name="id">
+
+          <div class="form-grid">
+            <label>
+              Tên món ăn / Combo *
+              <input name="name" required placeholder="Ví dụ: Set lẩu nấm bách thảo">
+            </label>
+
+            <label>
+              Danh mục thực phẩm *
+              <select name="category" required>
+                <option value="combo">Combo bữa cơm gia đình</option>
+                <option value="rau">Rau củ sơ chế & Salad</option>
+                <option value="thit">Thịt cá & Món mặn</option>
+                <option value="canh">Canh dinh dưỡng & Lẩu</option>
+              </select>
+            </label>
+
+            <label>
+              Giá bán (VNĐ) *
+              <input name="price" type="number" min="1000" step="1000" required placeholder="129000">
+            </label>
+
+            <label>
+              Giá gốc (Gạch chân)
+              <input name="oldPrice" type="number" min="0" step="1000" placeholder="149000">
+            </label>
+
+            <label>
+              Số lượng tồn kho (Set) *
+              <input name="stock" type="number" min="0" required placeholder="25">
+            </label>
+
+            <label>
+              Huy hiệu nhãn (Tag)
+              <input name="tag" placeholder="Bán chạy, Mới, Giải nhiệt...">
+            </label>
+
+            <label>
+              Khẩu phần
+              <input name="weight" placeholder="2-3 người ăn">
+            </label>
+
+            <label>
+              Thời gian nấu
+              <input name="time" placeholder="20-25 phút">
+            </label>
+
+            <label class="full-field">
+              Đường dẫn hình ảnh (URL)
+              <input name="image" type="url" placeholder="https://images.unsplash.com/...">
+            </label>
+
+            <label class="full-field">
+              Mô tả chi tiết món ăn *
+              <textarea name="description" rows="3" required placeholder="Mô tả hương vị, nguyên liệu và điểm đặc sắc của món..."></textarea>
+            </label>
+          </div>
+
+          <div class="button-row">
+            <button class="btn btn-primary" type="submit">💾 Lưu món ăn</button>
+            <button type="button" id="cancelProduct" class="btn btn-outline">Hủy bỏ</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- TAB 3: QUẢN LÝ NGUỒN GỐC NGUYÊN LIỆU & GIẤY TỜ -->
+      <section id="ingredientsPanel" class="admin-panel hidden">
+        <div class="panel-header-row">
+          <div>
+            <h2>Cơ sở dữ liệu Nguồn gốc & Giấy kiểm định</h2>
+            <p class="muted">Minh bạch 100% hồ sơ nhà cung ứng, tiêu chuẩn VietGAP/GlobalGAP và chứng nhận kiểm dịch.</p>
+          </div>
+        </div>
+
+        <div class="ingredients-admin-grid" id="adminIngredientsGrid">
+          <!-- Render từ admin.js -->
+        </div>
+      </section>
+
+      <!-- TAB 4: QUẢN LÝ TÀI KHOẢN & PHÂN QUYỀN -->
+      <section id="usersPanel" class="admin-panel hidden">
+        <div class="panel-header-row">
+          <div>
+            <h2>Quản lý Tài khoản & Phân quyền vai trò</h2>
+            <p class="muted">Kiểm soát danh sách người dùng, chuyển đổi vai trò Khách hàng ⇋ Admin.</p>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Họ và tên</th>
+                <th>Email</th>
+                <th>Số điện thoại</th>
+                <th>Vai trò hiện tại</th>
+                <th>Ngày đăng ký</th>
+                <th>Thao tác phân quyền</th>
+              </tr>
+            </thead>
+            <tbody id="adminUserRows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL XEM CHI TIẾT ĐƠN HÀNG ADMIN -->
+  <div id="adminOrderModal" class="cert-modal hidden" role="dialog" aria-modal="true">
+    <div class="cert-modal-backdrop" onclick="closeAdminOrderModal()"></div>
+    <div class="cert-modal-dialog">
+      <button class="cert-modal-close" onclick="closeAdminOrderModal()">✕</button>
+      <div id="adminOrderModalContent" class="modal-inner-card"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

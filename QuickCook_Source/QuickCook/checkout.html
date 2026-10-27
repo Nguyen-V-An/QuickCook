@@ -1,1 +1,144 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Thanh toán | QuickCook</title><link rel="stylesheet" href="css/styles.css"></head><body><div class="top-strip">Tươi ngon mỗi ngày · Giao nhanh nội thành</div><header class="site-header"><a class="brand" href="index.html"><span class="brand-mark">Q</span><span>quick<span class="brand-green">cook</span><small>NẤU NGON, SỐNG NHẸ</small></span></a><div class="checkout-label">THANH TOÁN AN TOÀN (DEMO)</div><nav class="header-actions"><a href="cart.html">← Quay lại giỏ hàng</a></nav></header><main class="wrap page-main"><div class="breadcrumbs"><a href="index.html">Trang chủ</a> / <a href="cart.html">Giỏ hàng</a> / Thanh toán</div><div class="checkout-layout"><form id="checkoutForm" class="form-card"><span class="eyebrow">THÔNG TIN GIAO HÀNG</span><h1>Đặt hàng</h1><div class="form-grid"><label>Họ và tên *<input name="name" required minlength="2" placeholder="Nguyễn Văn A"></label><label>Số điện thoại *<input name="phone" required pattern="[0-9+ ]{9,15}" placeholder="09xxxxxxxx"></label><label class="full-field">Email<input name="email" type="email" placeholder="ban@email.com"></label><label class="full-field">Địa chỉ nhận hàng *<input name="address" required placeholder="Số nhà, đường, phường/xã, tỉnh/thành"></label><label class="full-field">Ghi chú<textarea name="note" rows="3" placeholder="Thời gian giao hàng hoặc lưu ý..."></textarea></label></div><h3>Phương thức thanh toán</h3><label class="payment-option"><input type="radio" name="payment" value="COD" checked> <span><b>Thanh toán khi nhận hàng (COD)</b><small>Trả tiền trực tiếp cho người giao hàng.</small></span></label><label class="payment-option"><input type="radio" name="payment" value="BANKING"> <span><b>Chuyển khoản (demo)</b><small>Chưa kết nối cổng thanh toán thật.</small></span></label><button class="btn btn-primary btn-full" type="submit">Xác nhận đặt hàng →</button><p class="muted small">Đây là bản demo frontend, không gửi dữ liệu đến máy chủ.</p></form><aside id="checkoutSummary" class="summary-card"></aside></div></main><footer class="footer"><div class="footer-bottom">© 2026 QuickCook</div></footer><div id="toast" class="toast"></div><script src="js/data.js"></script><script src="js/app.js"></script><script src="js/checkout.js"></script></body></html>
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thanh toán & Đặt hàng | QuickCook</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="top-strip">Tươi ngon mỗi ngày · Giao nhanh nội thành · Cam kết chuẩn nguồn gốc</div>
+  
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">Q</span>
+      <span>quick<span class="brand-green">cook</span><small>NẤU NGON, SỐNG NHẸ</small></span>
+    </a>
+    <div class="checkout-label">CỔNG THANH TOÁN AN TOÀN QUICKCOOK</div>
+    <nav class="header-actions">
+      <a href="cart.html">← Quay lại giỏ hàng</a>
+    </nav>
+  </header>
+
+  <main class="wrap page-main">
+    <div class="breadcrumbs">
+      <a href="index.html">Trang chủ</a> / 
+      <a href="cart.html">Giỏ hàng</a> / 
+      <span>Thanh toán</span>
+    </div>
+
+    <!-- MÀN HÌNH ĐẶT HÀNG -->
+    <div id="checkoutMainLayout" class="checkout-layout">
+      <!-- FORM ĐIỀN THÔNG TIN -->
+      <form id="checkoutForm" class="form-card">
+        <span class="eyebrow">BƯỚC 1: THÔNG TIN GIAO HÀNG</span>
+        <h1>Xác nhận đặt hàng</h1>
+
+        <div id="loggedUserNotice" class="notice notice-info hidden">
+          <!-- Hiển thị thông báo tự điền thông tin tài khoản -->
+        </div>
+
+        <div class="form-grid">
+          <label>
+            Họ và tên người nhận *
+            <input name="name" required minlength="2" placeholder="Ví dụ: Nguyễn Văn An" id="cName">
+          </label>
+
+          <label>
+            Số điện thoại nhận hàng *
+            <input name="phone" required pattern="[0-9+ ]{9,15}" placeholder="Ví dụ: 0987654321" id="cPhone">
+          </label>
+
+          <label class="full-field">
+            Email nhận hóa đơn điện tử
+            <input name="email" type="email" placeholder="ban@email.com" id="cEmail">
+          </label>
+
+          <label class="full-field">
+            Địa chỉ nhận hàng chi tiết *
+            <input name="address" required placeholder="Số nhà, tên đường, phường/xã, quận/huyện, TP" id="cAddress">
+          </label>
+
+          <label class="full-field">
+            Ghi chú cho bếp & shipper
+            <textarea name="note" rows="2" placeholder="Ví dụ: Giao trước 11h30 trưa, không lấy ớt..."></textarea>
+          </label>
+        </div>
+
+        <!-- PHƯƠNG THỨC THANH TOÁN -->
+        <span class="eyebrow" style="margin-top:25px;">BƯỚC 2: PHƯƠNG THỨC THANH TOÁN</span>
+        <h3>Chọn phương thức thanh toán</h3>
+
+        <div class="payment-methods-list">
+          <label class="payment-option selected">
+            <input type="radio" name="payment" value="VIETQR" checked>
+            <div class="payment-opt-body">
+              <div class="opt-title">
+                <b>⚡ Chuyển khoản VietQR Ngân hàng (Khuyên dùng)</b>
+                <span class="badge-recom">Nhanh & Tiện lợi</span>
+              </div>
+              <small>Hệ thống tự động tạo mã QR chứa số tiền và nội dung đơn. Quét bằng app ngân hàng / MoMo bất kỳ.</small>
+            </div>
+          </label>
+
+          <label class="payment-option">
+            <input type="radio" name="payment" value="COD">
+            <div class="payment-opt-body">
+              <div class="opt-title">
+                <b>💵 Thanh toán tiền mặt khi nhận hàng (COD)</b>
+              </div>
+              <small>Thanh toán trực tiếp cho shipper khi nhận được thùng thực phẩm đóng gói bảo quản lạnh.</small>
+            </div>
+          </label>
+
+          <label class="payment-option">
+            <input type="radio" name="payment" value="MOMO">
+            <div class="payment-opt-body">
+              <div class="opt-title">
+                <b>📱 Ví điện tử MoMo / ZaloPay</b>
+              </div>
+              <small>Thanh toán siêu tốc qua ứng dụng ví điện tử MoMo.</small>
+            </div>
+          </label>
+        </div>
+
+        <!-- MÃ GIẢM GIÁ / VOUCHER -->
+        <div class="voucher-box">
+          <label>Mã ưu đãi (Voucher):</label>
+          <div class="voucher-input-row">
+            <input type="text" id="voucherInput" placeholder="Nhập mã: QUICKCOOK20 hoặc FREESHIP">
+            <button type="button" class="btn btn-outline" id="applyVoucherBtn">Áp dụng</button>
+          </div>
+          <div id="voucherMsg" class="voucher-status-msg"></div>
+        </div>
+
+        <button class="btn btn-primary btn-full btn-large" type="submit" id="btnSubmitOrder">
+          Tiến hành thanh toán ngay →
+        </button>
+
+        <p class="muted small text-center" style="margin-top:12px;">
+          🔒 Thông tin của bạn được bảo mật tuyệt đối. Cam kết hoàn tiền 100% nếu nguyên liệu không tươi ngon.
+        </p>
+      </form>
+
+      <!-- TÓM TẮT ĐƠN HÀNG -->
+      <aside id="checkoutSummary" class="summary-card"></aside>
+    </div>
+
+    <!-- MÀN HÌNH THANH TOÁN VIETQR & XÁC NHẬN ĐƠN HÀNG THÀNH CÔNG -->
+    <div id="paymentSuccessScreen" class="payment-screen hidden">
+      <!-- Sẽ được render bởi checkout.js -->
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-bottom">© 2026 QuickCook · Hệ thống thanh toán trực tuyến bảo mật.</div>
+  </footer>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/checkout.js"></script>
+</body>
+</html>
