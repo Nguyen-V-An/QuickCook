@@ -1,1 +1,117 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Chi tiết sản phẩm | QuickCook</title><link rel="stylesheet" href="css/styles.css"></head><body><div class="top-strip">Tươi ngon mỗi ngày · Giao nhanh nội thành · Minh bạch nguồn gốc</div><header class="site-header"><a class="brand" href="index.html"><span class="brand-mark">Q</span><span>quick<span class="brand-green">cook</span><small>NẤU NGON, SỐNG NHẸ</small></span></a><form class="search" id="searchForm"><input id="searchInput" type="search" placeholder="Tìm món ăn, combo nguyên liệu..."><button>⌕</button></form><nav class="header-actions"><a href="login.html">♙ <span>Tài khoản</span></a><a href="cart.html">🛒 <span>Giỏ hàng</span> <b id="cartCount" class="cart-count">0</b></a></nav></header><nav class="main-nav"><a href="index.html">Trang chủ</a><a class="active" href="products.html">Sản phẩm</a><a href="cart.html">Giỏ hàng</a></nav><main class="wrap page-main"><div class="breadcrumbs"><a href="index.html">Trang chủ</a> / <a href="products.html">Sản phẩm</a> / Chi tiết</div><div id="productDetail" class="product-detail"></div><section class="section"><div class="section-heading"><div><span class="eyebrow">CÓ THỂ BẠN SẼ THÍCH</span><h2>Sản phẩm liên quan</h2></div></div><div id="relatedProducts" class="product-grid"></div></section></main><footer class="footer"><div class="footer-bottom">© 2026 QuickCook</div></footer><div id="toast" class="toast"></div><script src="js/data.js"></script><script src="js/app.js"></script><script src="js/product.js"></script></body></html>
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chi tiết món ăn & Minh bạch nguyên liệu | QuickCook</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="top-strip">Tươi ngon mỗi ngày · Giao nhanh nội thành · 100% Minh bạch nguồn gốc & Giấy tờ kiểm định</div>
+  
+  <header class="site-header">
+    <a class="brand" href="index.html">
+      <span class="brand-mark">Q</span>
+      <span>quick<span class="brand-green">cook</span><small>NẤU NGON, SỐNG NHẸ</small></span>
+    </a>
+    <form class="search" id="searchForm">
+      <input id="searchInput" type="search" placeholder="Tìm món ăn, combo nguyên liệu..." aria-label="Tìm kiếm">
+      <button>⌕</button>
+    </form>
+    <nav class="header-actions">
+      <a href="cart.html">🛒 <span>Giỏ hàng</span> <b id="cartCount" class="cart-count">0</b></a>
+    </nav>
+  </header>
+
+  <nav class="main-nav">
+    <a href="index.html">Trang chủ</a>
+    <a class="active" href="products.html">Sản phẩm</a>
+    <a href="products.html?category=combo">Combo gia đình</a>
+    <a href="products.html?category=rau">Rau củ sơ chế</a>
+    <a href="products.html?category=thit">Thịt cá</a>
+    <a href="cart.html">Giỏ hàng</a>
+  </nav>
+
+  <main class="wrap page-main">
+    <div class="breadcrumbs">
+      <a href="index.html">Trang chủ</a> / 
+      <a href="products.html">Sản phẩm</a> / 
+      <span id="breadcrumbDishName">Chi tiết món ăn</span>
+    </div>
+
+    <!-- KHU VỰC CHI TIẾT SẢN PHẨM CHÍNH -->
+    <div id="productDetail" class="product-detail">
+      <div class="loading-state">Đang tải thông tin món ăn...</div>
+    </div>
+
+    <!-- KHU VỰC NGUYÊN LIỆU ĐỊNH LƯỢNG & NÚT TRUY XUẤT NGUỒN GỐC -->
+    <section class="section ingredients-section" id="dishIngredientsSection">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">NGUYÊN LIỆU ĐỊNH LƯỢNG & MINH BẠCH NGUỒN GỐC</span>
+          <h2>Thành phần trong combo của bạn</h2>
+          <p>Mỗi nguyên liệu đều được chọn lọc từ các đối tác trang trại uy tín có giấy tờ kiểm định an toàn vệ sinh thực phẩm.</p>
+        </div>
+      </div>
+      <div id="dishIngredientsList" class="dish-ingredients-grid"></div>
+    </section>
+
+    <!-- HƯỚNG DẪN CÔNG THỨC NẤU & GIÁ TRỊ DINH DƯỠNG -->
+    <section class="section cooking-guide-section" id="dishCookingGuide">
+      <div class="cooking-guide-grid">
+        <div class="steps-box">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">DỄ NẤU TẠI NHÀ</span>
+              <h2>Hướng dẫn các bước chế biến</h2>
+              <p>Chỉ cần 15 - 30 phút với nguyên liệu đã được QuickCook sơ chế sạch sẽ.</p>
+            </div>
+          </div>
+          <div id="dishStepsList" class="steps-flow"></div>
+        </div>
+
+        <div class="nutrition-box">
+          <div class="section-heading">
+            <div>
+              <span class="eyebrow">DƯỠNG CHẤT BỮA ĂN</span>
+              <h2>Giá trị dinh dưỡng</h2>
+            </div>
+          </div>
+          <div id="dishNutritionCard" class="nutrition-card"></div>
+
+          <div class="guarantee-box">
+            <h4>🌿 Cam kết từ QuickCook:</h4>
+            <ul>
+              <li>Không chất bảo quản hóa học độc hại.</li>
+              <li>Sơ chế, cắt thái và đóng khay vô trùng trong ngày.</li>
+              <li>Bảo quản mát 0°C đến 4°C trên toàn tuyến vận chuyển.</li>
+              <li>Hạn sử dụng: 48 giờ trong ngăn mát tủ lạnh.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SẢN PHẨM GỢI Ý LIÊN QUAN -->
+    <section class="section">
+      <div class="section-heading">
+        <div>
+          <span class="eyebrow">CÓ THỂ BẠN CŨNG THÍCH</span>
+          <h2>Gợi ý combo món ngon khác</h2>
+        </div>
+      </div>
+      <div id="relatedProducts" class="product-grid"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-bottom">© 2026 QuickCook · Tươi ngon mỗi ngày · Nấu ngon, sống nhẹ.</div>
+  </footer>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/product.js"></script>
+</body>
+</html>
