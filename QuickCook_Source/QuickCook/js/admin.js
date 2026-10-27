@@ -319,7 +319,9 @@ function renderAdminOrders() {
       </td>
       <td>
         <div class="payment-col-wrap">
-          <span class="payment-badge">${o.payment === "VIETQR" ? "⚡ VietQR" : (o.payment === "MOMO" ? "📱 MoMo" : "💵 COD")}</span>
+          <span class="payment-badge ${o.payment === 'MOMO' ? 'badge-momo-qr' : (o.payment === 'ZALOPAY' ? 'badge-zalopay-qr' : '')}">
+            ${o.payment === "VIETQR" ? "⚡ VietQR" : (o.payment === "MOMO" ? "🟣 MoMo" : (o.payment === "ZALOPAY" ? "🔵 ZaloPay" : "💵 COD"))}
+          </span>
           <small class="${o.paymentStatus.includes('Đã') ? 'text-success' : 'text-orange'}">${escapeHtml(o.paymentStatus)}</small>
         </div>
       </td>

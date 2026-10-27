@@ -1724,6 +1724,67 @@
   margin-top: 20px;
 }
 
+/* 10. MoMo & ZaloPay QR Payment Styling */
+.badge-momo {
+  background: #fdf2f8 !important;
+  color: #be185d !important;
+}
+.badge-zalopay {
+  background: #eff6ff !important;
+  color: #1d4ed8 !important;
+}
+.btn-momo {
+  background: #d82d8b !important;
+  color: #fff !important;
+}
+.btn-momo:hover {
+  background: #a50064 !important;
+}
+.btn-zalopay {
+  background: #0068ff !important;
+  color: #fff !important;
+}
+.btn-zalopay:hover {
+  background: #0052cc !important;
+}
+.qr-brand-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.badge-momo-qr {
+  background: #fce7f3;
+  color: #9d174d;
+  border: 1px solid #fbcfe8;
+}
+.badge-zalopay-qr {
+  background: #dbeafe;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+.badge-vietqr-qr {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+.qr-box-momo {
+  border-color: #f472b6 !important;
+  background: #fffbfe !important;
+}
+.qr-box-zalopay {
+  border-color: #60a5fa !important;
+  background: #f8fbff !important;
+}
+.theme-momo .confirm-icon {
+  filter: drop-shadow(0 4px 10px rgba(216, 45, 139, 0.3));
+}
+.theme-zalopay .confirm-icon {
+  filter: drop-shadow(0 4px 10px rgba(0, 104, 255, 0.3));
+}
+
 @media (max-width: 900px) {
   .ingredient-hero-grid, .cooking-guide-grid, .vietqr-box-container, .analytics-row, .order-details-grid {
     grid-template-columns: 1fr;
@@ -1734,5 +1795,54 @@
   .admin-stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+}
+
+/* Safety Compliance, Cold Chain & Allergen Alert Styles */
+.safety-compliance-box {
+  background: #fbfbf9;
+  border: 1px solid #e2e8df;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin: 18px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.safety-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.safety-item .icon {
+  font-size: 18px;
+  line-height: 1;
+}
+.safety-item b {
+  color: #1f2937;
+  display: inline-block;
+  margin-right: 6px;
+}
+.safety-item.cold-chain {
+  color: #1e3a8a;
+}
+.safety-item.allergen-alert {
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+.allergen-tag {
+  display: inline-block;
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  margin: 2px 4px 2px 0;
 }
 

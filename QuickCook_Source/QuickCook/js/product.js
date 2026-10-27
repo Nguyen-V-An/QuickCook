@@ -73,10 +73,21 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </div>
 
-      <div class="stock-status-row">
-        <span class="stock-indicator ${p.stock > 0 ? "in-stock" : "out-of-stock"}">
-          ● ${p.stock > 0 ? `Còn hàng trong kho (${p.stock} set sẵn sàng giao)` : "Tạm hết hàng"}
-        </span>
+      <div class="safety-compliance-box">
+        <div class="safety-item cold-chain">
+          <span class="icon">❄️</span>
+          <div>
+            <b>Bảo quản Cold Chain:</b>
+            <span>${escapeHtml(p.storageGuide || "Ngăn mát 0°C - 4°C · Hạn sử dụng: 48h từ khi sơ chế")}</span>
+          </div>
+        </div>
+        <div class="safety-item allergen-alert">
+          <span class="icon">⚠️</span>
+          <div>
+            <b>Cảnh báo dị ứng:</b>
+            <span>${(p.allergens && p.allergens.length ? p.allergens : ["Không chứa chất gây dị ứng nhóm Big 8"]).map(a => `<span class="allergen-tag">${escapeHtml(a)}</span>`).join("")}</span>
+          </div>
+        </div>
       </div>
 
       <div class="quantity-row">

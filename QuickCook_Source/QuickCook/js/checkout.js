@@ -104,6 +104,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const fd = new FormData(form);
       const orderId = "QC" + Date.now().toString().slice(-8);
       const paymentMethod = fd.get("payment");
+      let initialPaymentStatus = "Chưa thanh toán (Thu COD)";
+      if (paymentMethod === "VIETQR") initialPaymentStatus = "Chờ thanh toán VietQR";
+      else if (paymentMethod === "MOMO") initialPaymentStatus = "Chờ thanh toán MoMo QR";
+      else if (paymentMethod === "ZALOPAY") initialPaymentStatus = "Chờ thanh toán ZaloPay QR";
 
       const newOrder = {
         id: orderId,
@@ -114,7 +118,7 @@ document.addEventListener("DOMContentLoaded", () => {
         address: fd.get("address"),
         note: fd.get("note"),
         payment: paymentMethod,
-        paymentStatus: paymentMethod === "COD" ? "Chưa thanh toán (Thu COD)" : "Chờ thanh toán QR",
+        paymentStatus: initialPaymentStatus,
         status: "Mới đặt",
         items: data.items.map(i => ({
           id: i.id,
@@ -204,7 +208,7 @@ function renderCheckoutSummary() {
   `;
 }
 
-// Hiển thị màn hình Thanh toán VietQR & Xác nhận đặt hàng
+// Hiển thị màn hình Thanh toán VietQR / MoMo / ZaloPay & Xác nhận đặt hàng
 function displayOrderSuccessScreen(order) {
   const mainLayout = document.getElementById("checkoutMainLayout");
   const successScreen = document.getElementById("paymentSuccessScreen");
@@ -215,22 +219,81 @@ function displayOrderSuccessScreen(order) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 
   const isVietQR = order.payment === "VIETQR";
-  const vietQrUrl = `https://img.vietqr.io/image/MB-0388998899-compact2.jpg?amount=${order.total}&addInfo=${encodeURIComponent(order.id)}&accountName=QUICKCOOK%20VIETNAM`;
+  const isMoMo = order.payment === "MOMO";
+  const isZaloPay = order.payment === "ZALOPAY";
+  const isOnlinePayment = isVietQR || isMoMo || isZaloPay;
+
+  let qrTitle = "Đặt hàng thành công!";
+  let qrIcon = "🎉";
+  let qrImgUrl = "";
+  let providerName = "";
+  let accountLabel = "Số tài khoản:";
+  let accountNumber = "0388998899";
+  let accountHolder = "CONG TY QUICKCOOK VIETNAM";
+  let themeClass = "theme-vietqr";
+  let guideSteps = [];
+
+  if (isVietQR) {
+    qrTitle = "Quét mã VietQR để hoàn tất thanh toán";
+    qrIcon = "⚡";
+    qrImgUrl = `https://img.vietqr.io/image/MB-0388998899-compact2.jpg?amount=${order.total}&addInfo=${encodeURIComponent(order.id)}&accountName=QUICKCOOK%20VIETNAM`;
+    providerName = "MBBank - Ngân hàng Quân Đội";
+    accountLabel = "Số tài khoản:";
+    accountNumber = "0388998899";
+    accountHolder = "CONG TY QUICKCOOK VIETNAM";
+    themeClass = "theme-vietqr";
+    guideSteps = [
+      "Mở app ngân hàng bất kỳ (MB, VCB, Techcombank, VPBank, ACB...)",
+      "Chọn tính năng <b>Quét mã QR</b> và quét mã VietQR bên cạnh.",
+      "Kiểm tra số tiền và nội dung chuyển khoản, sau đó bấm <b>Xác nhận</b>."
+    ];
+  } else if (isMoMo) {
+    qrTitle = "Quét mã MoMo QR để hoàn tất thanh toán";
+    qrIcon = "🟣";
+    qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent('2|99|0987654321|CONG TY QUICKCOOK VIETNAM|hello@quickcook.vn|0|0|' + order.total + '|' + order.id + '|transfer_myqr')}`;
+    providerName = "Ví điện tử MoMo (MoMo Business)";
+    accountLabel = "Số điện thoại ví MoMo:";
+    accountNumber = "0987654321";
+    accountHolder = "CONG TY QUICKCOOK VIETNAM (Doanh nghiệp ✓)";
+    themeClass = "theme-momo";
+    guideSteps = [
+      "Mở ứng dụng <b>Ví MoMo</b> trên điện thoại của bạn.",
+      "Bấm vào biểu tượng <b>Quét Mã</b> ở góc trên màn hình chính.",
+      "Quét mã MoMo QR bên cạnh, kiểm tra số tiền và xác nhận chuyển tiền."
+    ];
+  } else if (isZaloPay) {
+    qrTitle = "Quét mã ZaloPay QR để hoàn tất thanh toán";
+    qrIcon = "🔵";
+    qrImgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent('https://zalopay.vn/pay?amount=' + order.total + '&desc=' + order.id + '&merchant=QUICKCOOK_VIETNAM')}`;
+    providerName = "Ví điện tử ZaloPay (ZaloPay Merchant)";
+    accountLabel = "Tài khoản nhận ZaloPay:";
+    accountNumber = "0987654321";
+    accountHolder = "CONG TY QUICKCOOK VIETNAM";
+    themeClass = "theme-zalopay";
+    guideSteps = [
+      "Mở ứng dụng <b>Zalo</b> hoặc <b>ZaloPay</b> trên điện thoại.",
+      "Bấm vào biểu tượng <b>Quét mã QR</b> trên thanh tìm kiếm hoặc màn hình chính.",
+      "Quét mã ZaloPay QR bên cạnh để hoàn tất chuyển tiền nhanh chóng."
+    ];
+  }
 
   successScreen.innerHTML = `
-    <div class="order-confirm-card">
+    <div class="order-confirm-card ${themeClass}">
       <div class="confirm-header">
-        <div class="confirm-icon">${isVietQR ? "⚡" : "🎉"}</div>
-        <h1>${isVietQR ? "Quét mã VietQR để hoàn tất thanh toán" : "Đặt hàng thành công!"}</h1>
+        <div class="confirm-icon">${qrIcon}</div>
+        <h1>${qrTitle}</h1>
         <p class="muted">Mã đơn hàng: <b class="order-id-highlight">${order.id}</b></p>
       </div>
 
-      ${isVietQR ? `
-        <!-- KHU VỰC QUÉT MÃ VIETQR CHUYỂN KHOẢN -->
-        <div class="vietqr-box-container">
+      ${isOnlinePayment ? `
+        <!-- KHU VỰC QUÉT MÃ QR THANH TOÁN (VIETQR / MOMO / ZALOPAY) -->
+        <div class="vietqr-box-container qr-box-${order.payment.toLowerCase()}">
           <div class="vietqr-qr-col">
+            <div class="qr-brand-badge ${isMoMo ? 'badge-momo-qr' : (isZaloPay ? 'badge-zalopay-qr' : 'badge-vietqr-qr')}">
+              ${isMoMo ? '🟣 MoMo QR Chính Hãng' : (isZaloPay ? '🔵 ZaloPay QR Chính Hãng' : '⚡ VietQR Napas 247')}
+            </div>
             <div class="qr-frame">
-              <img src="${vietQrUrl}" alt="Mã VietQR Đơn ${order.id}" class="vietqr-img" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=VIETQR-${order.id}'">
+              <img src="${qrImgUrl}" alt="Mã thanh toán ${order.payment} Đơn ${order.id}" class="vietqr-img" onerror="this.src='https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${order.payment}-${order.id}'">
             </div>
             <div class="qr-countdown" id="qrCountdown">
               ⏱️ Mã QR có hiệu lực trong: <b id="countdownTimer">14:59</b>
@@ -238,25 +301,25 @@ function displayOrderSuccessScreen(order) {
           </div>
 
           <div class="vietqr-info-col">
-            <h3>Thông tin tài khoản nhận:</h3>
+            <h3>Thông tin thanh toán:</h3>
             <div class="bank-details-card">
               <div class="b-row">
-                <span>Ngân hàng thụ hưởng:</span>
-                <b>MBBank - Ngân hàng Quân Đội</b>
+                <span>Dịch vụ nhận tiền:</span>
+                <b>${providerName}</b>
               </div>
               <div class="b-row">
-                <span>Số tài khoản:</span>
+                <span>${accountLabel}</span>
                 <div class="copy-field">
-                  <b id="stkVal">0388998899</b>
-                  <button type="button" class="btn-copy" onclick="copyText('0388998899', this)">Sao chép</button>
+                  <b id="stkVal">${accountNumber}</b>
+                  <button type="button" class="btn-copy" onclick="copyText('${accountNumber}', this)">Sao chép</button>
                 </div>
               </div>
               <div class="b-row">
-                <span>Chủ tài khoản:</span>
-                <b>CONG TY QUICKCOOK VIETNAM</b>
+                <span>Chủ tài khoản / Đơn vị nhận:</span>
+                <b>${accountHolder}</b>
               </div>
               <div class="b-row">
-                <span>Số tiền chính xác:</span>
+                <span>Số tiền thanh toán:</span>
                 <div class="copy-field">
                   <b class="text-price" id="amountVal">${money(order.total)}</b>
                   <button type="button" class="btn-copy" onclick="copyText('${order.total}', this)">Sao chép</button>
@@ -272,32 +335,30 @@ function displayOrderSuccessScreen(order) {
             </div>
 
             <div class="qr-steps-guide">
-              <p><b>Hướng dẫn 3 bước quét mã:</b></p>
+              <p><b>Hướng dẫn 3 bước thanh toán qua ${isMoMo ? 'MoMo' : (isZaloPay ? 'ZaloPay' : 'Ngân hàng')}:</b></p>
               <ol>
-                <li>Mở app ngân hàng (MB, VCB, Techcombank, MoMo...) chọn <b>Quét mã QR</b>.</li>
-                <li>Quét mã QR bên cạnh để hệ thống tự điền đúng số tiền và nội dung.</li>
-                <li>Bấm xác nhận chuyển khoản rồi bấm nút bên dưới.</li>
+                ${guideSteps.map(st => `<li>${st}</li>`).join("")}
               </ol>
             </div>
 
             <div class="confirm-payment-action">
-              <button class="btn btn-primary btn-full btn-large" id="btnConfirmPaid" onclick="simulatePaymentConfirm('${order.id}')">
-                ✅ Tôi đã chuyển khoản thành công
+              <button class="btn btn-primary btn-full btn-large ${isMoMo ? 'btn-momo' : (isZaloPay ? 'btn-zalopay' : '')}" id="btnConfirmPaid" onclick="simulatePaymentConfirm('${order.id}', '${order.payment}')">
+                ✅ Tôi đã hoàn tất thanh toán ${isMoMo ? 'MoMo' : (isZaloPay ? 'ZaloPay' : 'VietQR')}
               </button>
               <small class="muted text-center" style="display:block;margin-top:6px;">
-                Hệ thống tự động kiểm tra và cập nhật trạng thái đơn trong 3-5 giây.
+                Hệ thống tự động kiểm tra giao dịch và xác nhận đơn hàng sau 2-3 giây.
               </small>
             </div>
           </div>
         </div>
       ` : `
-        <!-- XÁC NHẬN COD / MOMO -->
+        <!-- XÁC NHẬN THANH TOÁN TIỀN MẶT COD -->
         <div class="cod-success-box">
           <div class="status-alert">
             <span class="icon">📦</span>
             <div>
               <b>Đơn hàng đã được chuyển tới Bếp trung tâm QuickCook</b>
-              <p>Bếp đang tiến hành chuẩn bị các phần nguyên liệu tươi sạch và đóng gói thùng lạnh chuyển giao cho shipper.</p>
+              <p>Bếp đang tiến hành chuẩn bị các phần nguyên liệu tươi sạch và đóng gói thùng lạnh chuyển giao cho shipper. Bạn sẽ thanh toán <b>${money(order.total)}</b> tiền mặt khi nhận hàng.</p>
             </div>
           </div>
         </div>
@@ -343,7 +404,7 @@ function displayOrderSuccessScreen(order) {
           <p>📞 <b>Số điện thoại:</b> ${escapeHtml(order.phone)}</p>
           <p>📍 <b>Địa chỉ:</b> ${escapeHtml(order.address)}</p>
           ${order.note ? `<p>📝 <b>Ghi chú:</b> ${escapeHtml(order.note)}</p>` : ""}
-          <p>💳 <b>Phương thức:</b> ${order.payment === "VIETQR" ? "Chuyển khoản VietQR" : (order.payment === "MOMO" ? "Ví MoMo" : "Thanh toán COD")}</p>
+          <p>💳 <b>Phương thức:</b> ${order.payment === "VIETQR" ? "Chuyển khoản VietQR" : (order.payment === "MOMO" ? "Ví điện tử MoMo" : (order.payment === "ZALOPAY" ? "Ví điện tử ZaloPay" : "Thanh toán COD"))}</p>
           <p>🏷️ <b>Trạng thái thanh toán:</b> <span id="paymentStatusTag" class="status-pill">${escapeHtml(order.paymentStatus)}</span></p>
         </div>
 
@@ -386,8 +447,8 @@ function displayOrderSuccessScreen(order) {
     </div>
   `;
 
-  // Start 15m countdown if VietQR
-  if (isVietQR) {
+  // Start 15m countdown if online payment
+  if (isOnlinePayment) {
     let timeLeft = 15 * 60;
     const timerEl = document.getElementById("countdownTimer");
     if (timerEl) {
@@ -421,12 +482,16 @@ window.copyText = function(text, btn) {
   });
 };
 
-// Mô phỏng kiểm tra thanh toán thành công
-window.simulatePaymentConfirm = function(orderId) {
+// Mô phỏng kiểm tra thanh toán thành công (VietQR / MoMo / ZaloPay)
+window.simulatePaymentConfirm = function(orderId, paymentMethod = "VIETQR") {
   const btn = document.getElementById("btnConfirmPaid");
+  let methodLabel = "VietQR";
+  if (paymentMethod === "MOMO") methodLabel = "MoMo";
+  else if (paymentMethod === "ZALOPAY") methodLabel = "ZaloPay";
+
   if (btn) {
     btn.disabled = true;
-    btn.innerHTML = `<span class="spinner-inline"></span> Đang xác thực giao dịch chuyển khoản...`;
+    btn.innerHTML = `<span class="spinner-inline"></span> Đang xác thực giao dịch ${methodLabel}...`;
   }
 
   setTimeout(() => {
@@ -434,22 +499,22 @@ window.simulatePaymentConfirm = function(orderId) {
     const orders = loadOrders();
     const order = orders.find(o => o.id === orderId);
     if (order) {
-      order.paymentStatus = "Đã thanh toán VietQR ✓";
+      order.paymentStatus = `Đã thanh toán ${methodLabel} ✓`;
       order.status = "Đang sơ chế";
       saveOrders(orders);
     }
 
     const tag = document.getElementById("paymentStatusTag");
     if (tag) {
-      tag.textContent = "Đã thanh toán VietQR ✓";
+      tag.textContent = `Đã thanh toán ${methodLabel} ✓`;
       tag.className = "status-pill tag-green";
     }
 
     if (btn) {
       btn.className = "btn btn-full btn-large btn-success";
-      btn.innerHTML = `🎉 Giao dịch thành công! Bếp đang nấu món cho bạn.`;
+      btn.innerHTML = `🎉 Giao dịch ${methodLabel} thành công! Bếp đang nấu món cho bạn.`;
     }
 
-    showToast("Xác nhận chuyển khoản thành công! Đơn hàng đang được chuẩn bị.", "success");
-  }, 1800);
+    showToast(`Xác nhận thanh toán ${methodLabel} thành công! Đơn hàng đang được chuẩn bị.`, "success");
+  }, 1600);
 };

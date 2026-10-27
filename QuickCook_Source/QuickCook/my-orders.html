@@ -117,8 +117,10 @@
               ${o.status === "Mới đặt" ? `
                 <button class="btn btn-outline btn-small" onclick="cancelOrder('${escapeJs(o.id)}')">Hủy đơn</button>
               ` : ""}
-              ${o.payment === "VIETQR" && !o.paymentStatus.includes("Đã") ? `
-                <button class="btn btn-primary btn-small" onclick="payAgain('${escapeJs(o.id)}')">Quét QR thanh toán</button>
+              ${(o.payment === "VIETQR" || o.payment === "MOMO" || o.payment === "ZALOPAY") && !o.paymentStatus.includes("Đã") ? `
+                <button class="btn btn-primary btn-small ${o.payment === 'MOMO' ? 'btn-momo' : (o.payment === 'ZALOPAY' ? 'btn-zalopay' : '')}" onclick="payAgain('${escapeJs(o.id)}')">
+                  Quét ${o.payment === 'MOMO' ? 'MoMo QR' : (o.payment === 'ZALOPAY' ? 'ZaloPay QR' : 'VietQR')}
+                </button>
               ` : ""}
             </div>
           </div>
@@ -150,7 +152,31 @@
       const orders = loadOrders();
       const order = orders.find(o => o.id === orderId);
       if (!order) return;
-      const vietQrUrl = `https://img.vietqr.io/image/MB-0388998899-compact2.jpg?amount=${order.total}&addInfo=${encodeURIComponent(order.id)}&accountName=QUICKCOOK%20VIETNAM`;
+
+      let qrUrl = "";
+      let brandTitle = "";
+      let bankInfo = "";
+      let btnClass = "";
+      let methodText = "VietQR";
+
+      if (order.payment === "MOMO") {
+        methodText = "MoMo";
+        brandTitle = "Quét mã MoMo QR thanh toán";
+        qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent('2|99|0987654321|CONG TY QUICKCOOK VIETNAM|hello@quickcook.vn|0|0|' + order.total + '|' + order.id + '|transfer_myqr')}`;
+        bankInfo = "Ví MoMo · SĐT: <b>0987654321</b> · CTY QUICKCOOK";
+        btnClass = "btn-momo";
+      } else if (order.payment === "ZALOPAY") {
+        methodText = "ZaloPay";
+        brandTitle = "Quét mã ZaloPay QR thanh toán";
+        qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data=${encodeURIComponent('https://zalopay.vn/pay?amount=' + order.total + '&desc=' + order.id + '&merchant=QUICKCOOK_VIETNAM')}`;
+        bankInfo = "Ví ZaloPay · SĐT: <b>0987654321</b> · CTY QUICKCOOK";
+        btnClass = "btn-zalopay";
+      } else {
+        methodText = "VietQR";
+        brandTitle = "Quét mã VietQR Ngân hàng";
+        qrUrl = `https://img.vietqr.io/image/MB-0388998899-compact2.jpg?amount=${order.total}&addInfo=${encodeURIComponent(order.id)}&accountName=QUICKCOOK%20VIETNAM`;
+        bankInfo = "MBBank · STK: <b>0388998899</b> · CTY QUICKCOOK";
+      }
       
       const modal = document.createElement("div");
       modal.className = "cert-modal";
@@ -158,30 +184,34 @@
         <div class="cert-modal-backdrop" onclick="this.parentElement.remove()"></div>
         <div class="cert-modal-dialog" style="max-width:480px;text-align:center;">
           <button class="cert-modal-close" onclick="this.closest('.cert-modal').remove()">✕</button>
-          <div style="background:#fff;padding:24px;border-radius:14px;">
-            <h3>Quét mã thanh toán đơn ${escapeHtml(order.id)}</h3>
-            <img src="${vietQrUrl}" style="max-width:240px;margin:15px auto;display:block;border:1px solid #ddd;border-radius:8px;">
-            <p><b>Số tiền:</b> <span class="text-price" style="font-size:20px;">${money(order.total)}</span></p>
-            <p><small>MBBank · STK: 0388998899 · CTY QUICKCOOK</small></p>
-            <button class="btn btn-primary btn-full" onclick="confirmPaidMini('${escapeJs(order.id)}', this)">✅ Xác nhận đã chuyển tiền</button>
+          <div style="background:#fff;padding:26px;border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,0.15);">
+            <h3 style="margin-top:0;">${brandTitle} đơn ${escapeHtml(order.id)}</h3>
+            <div style="background:#f9faf8;padding:12px;border-radius:10px;display:inline-block;border:1px solid #e1e7dc;">
+              <img src="${qrUrl}" style="max-width:240px;width:100%;aspect-ratio:1/1;display:block;" alt="Mã thanh toán">
+            </div>
+            <p style="margin:12px 0 4px;"><b>Số tiền:</b> <span class="text-price" style="font-size:22px;">${money(order.total)}</span></p>
+            <p style="font-size:12px;color:#555;margin:4px 0 16px;">${bankInfo}<br>Nội dung chuyển: <b style="color:#b91c1c;">${escapeHtml(order.id)}</b></p>
+            <button class="btn btn-primary btn-full ${btnClass}" onclick="confirmPaidMini('${escapeJs(order.id)}', '${methodText}', this)">
+              ✅ Xác nhận đã hoàn tất chuyển tiền
+            </button>
           </div>
         </div>
       `;
       document.body.appendChild(modal);
     }
 
-    window.confirmPaidMini = function(orderId, btn) {
+    window.confirmPaidMini = function(orderId, methodText, btn) {
       btn.disabled = true;
-      btn.textContent = "Đang kiểm tra...";
+      btn.textContent = `Đang kiểm tra giao dịch ${methodText}...`;
       setTimeout(() => {
         const orders = loadOrders();
         const order = orders.find(o => o.id === orderId);
         if (order) {
-          order.paymentStatus = "Đã thanh toán VietQR ✓";
+          order.paymentStatus = `Đã thanh toán ${methodText} ✓`;
           order.status = "Đang sơ chế";
           saveOrders(orders);
         }
-        showToast("Đã xác nhận thanh toán thành công!");
+        showToast(`Đã xác nhận thanh toán ${methodText} thành công!`);
         setTimeout(() => location.reload(), 800);
       }, 1200);
     };
